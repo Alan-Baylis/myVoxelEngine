@@ -1,0 +1,29 @@
+﻿<Properties StartupItem="Assembly-CSharp.csproj">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="Unity.Instance.Unity Editor" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\VoxelTerrain\VoxelTerrainEngine.cs">
+    <Files>
+      <File FileName="Assets\VoxelTerrain\VoxelTerrainEngine.cs" Line="340" Column="20" />
+      <File FileName="Assets\VoxelTerrain\VoxelChunk.cs" Line="429" Column="56" />
+      <File FileName="Assets\VoxelTerrain\MeshFactory.cs" Line="1" Column="1" />
+      <File FileName="Assets\VoxelTerrain\Shaders\Terrain1.shader" Line="98" Column="4" />
+      <File FileName="Assets\Assets\Scripts\World.cs" Line="1" Column="1" />
+      <File FileName="Assets\VoxelTerrain\MarchingCubes.cs" Line="1" Column="1" />
+      <File FileName="Assets\VoxelTerrain\Octree\Scripts\BoundsOctreeNode.cs" Line="1" Column="1" />
+      <File FileName="Assets\VoxelTerrain\plantPlacer.cs" Line="1" Column="1" />
+      <File FileName="Assets\VoxelTerrain\Util\DoubleKeyDictionary.cs" Line="1" Column="1" />
+      <File FileName="Assets\VoxelTerrain\DoubleChunk.cs" Line="1" Column="1" />
+      <File FileName="Assets\VoxelTerrain\ImprovedPerlinNoise.cs" Line="1" Column="1" />
+      <File FileName="Assets\VoxelTerrain\charactermover\charactermover.cs" Line="1" Column="1" />
+      <File FileName="Assets\VoxelTerrain\Util\DoubleKeyPairValue.cs" Line="1" Column="1" />
+      <File FileName="Assets\VoxelTerrain\Util\IntPair.cs" Line="1" Column="1" />
+      <File FileName="Assets\VoxelTerrain\NoiseModule.cs" Line="1" Column="1" />
+      <File FileName="Assets\VoxelTerrain\MoveObstacle.cs" Line="1" Column="1" />
+      <File FileName="Assets\VoxelTerrain\Shaders\atsV2WavingGrass.shader" Line="1" Column="1" />
+      <File FileName="Assets\VoxelTerrain\addDeletevoxel.cs" Line="1" Column="1" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>
