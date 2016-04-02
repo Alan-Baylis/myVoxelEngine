@@ -12,13 +12,12 @@ public class MarchingCubes
 	//Set the mode to use
 	//Cubes is faster and creates less verts, tetrahedrons is slower and creates more verts but better represents the mesh surface
 
-	public Vector3[] edgeVertex = new Vector3[12];
 
 	static public void SetTarget(float tar) { target = tar; }
 	static public void SetWindingOrder(int v0, int v1, int v2) { windingOrder = new int[]{ v0, v1, v2 }; }
 	static public Vector3 min;
 	static public Vector3 max;
-		public byte[] cube = new byte[8];
+
 
 
 	/// <summary>
@@ -28,11 +27,13 @@ public class MarchingCubes
 	/// <param name="voxels">Voxels.</param>
 	/// <param name="start">Start.</param>
 	/// <param name="end">End.</param>
-		public Vector3[] CreateVertices(byte[,,] voxels,VoxelChunk chunk, int start, int end , int lod)
-	{	List<int> index = new List<int>();
-		List<Vector3> verts = new List<Vector3>();
+	public static Vector3[] CreateVertices(byte[,,] voxels,VoxelChunk chunk, int start, int end , int lod)
+	{	
+			List<int> index = new List<int>();
+			List<Vector3> verts = new List<Vector3>();
 		
-		
+			Vector3[] edgeVertex = new Vector3[12];
+			byte[] cube = new byte[8];
 			for(int z = start; z < voxels.GetLength(2)-1-end; z++)
 			{		
 			for(int y = start; y < voxels.GetLength(1)-1-end; y++)
@@ -148,7 +149,7 @@ public class MarchingCubes
 	/// <param name="cube">Cube.</param>
 	/// <param name="vertList">Vert list.</param>
 	/// <param name="indexList">Index list.</param>
-	void MarchCube(Vector3 pos, byte[] cube, List<Vector3> vertList, List<int> indexList)
+		void MarchCube(Vector3 pos, byte[] cube, List<Vector3> vertList, List<int> indexList,Vector3[] edgeVertex)
 	{
 		int i, j, vert, idx;
 		int flagIndex = 0;
@@ -304,7 +305,7 @@ public class MarchingCubes
 	// vertexOffset lists the positions, relative to vertex0, of each of the 8 vertices of a cube
 	// vertexOffset[8][3]
 	
-	int[,] vertexOffset = new int[,]
+		static int[,] vertexOffset = new int[,]
 	{
 	    {0, 0, 0},{1, 0, 0},{1, 1, 0},{0, 1, 0},
 	    {0, 0, 1},{1, 0, 1},{1, 1, 1},{0, 1, 1}
@@ -313,7 +314,7 @@ public class MarchingCubes
 	// edgeConnection lists the index of the endpoint vertices for each of the 12 edges of the cube
 	// edgeConnection[12][2]
 	
-	int[,] edgeConnection = new int[,] 
+		static int[,] edgeConnection = new int[,] 
 	{
 	    {0,1}, {1,2}, {2,3}, {3,0},
 	    {4,5}, {5,6}, {6,7}, {7,4},
@@ -323,7 +324,7 @@ public class MarchingCubes
 	// edgeDirection lists the direction vector (vertex1-vertex0) for each edge in the cube
 	// edgeDirection[12][3]
 	
-	float[,] edgeDirection = new float[,]
+		static float[,] edgeDirection = new float[,]
 	{
 	    {1.0f, 0.0f, 0.0f},{0.0f, 1.0f, 0.0f},{-1.0f, 0.0f, 0.0f},{0.0f, -1.0f, 0.0f},
 	    {1.0f, 0.0f, 0.0f},{0.0f, 1.0f, 0.0f},{-1.0f, 0.0f, 0.0f},{0.0f, -1.0f, 0.0f},
@@ -372,7 +373,7 @@ public class MarchingCubes
 	// 0-2 edge triples with the list terminated by the invalid value -1.
 	// tetrahedronTriangles[16][7]
 
-	int[,] tetrahedronTriangles = new int[,]
+		static int[,] tetrahedronTriangles = new int[,]
 	{
         {-1, -1, -1, -1, -1, -1, -1},
         { 0,  3,  2, -1, -1, -1, -1},
@@ -404,7 +405,7 @@ public class MarchingCubes
 	// There are 12 edges.  For each entry in the table, if edge #n is intersected, then bit #n is set to 1
 	// cubeEdgeFlags[256]
 
-	int[] cubeEdgeFlags = new int[]
+	static int[] cubeEdgeFlags = new int[]
 	{
 		0, 265, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c, 0x80c, 0x905, 0xa0f, 0xb06, 0xc0a, 0xd03, 0xe09, 0xf00, 
 		0x190, 0x099, 0x393, 0x29a, 0x596, 0x49f, 0x795, 0x69c, 0x99c, 0x895, 0xb9f, 0xa96, 0xd9a, 0xc93, 0xf99, 0xe90, 
@@ -431,7 +432,7 @@ public class MarchingCubes
 	//  and corner[1] are inside of the surface, but the rest of the cube is not.
 	//  triangleConnectionTable[256][16]
 
-	int[,] triangleConnectionTable = new int[,]  
+		static int[,] triangleConnectionTable = new int[,]  
 	{
 	    {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
 	    {0, 8, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},

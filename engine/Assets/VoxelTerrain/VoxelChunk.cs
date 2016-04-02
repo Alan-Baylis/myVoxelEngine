@@ -126,7 +126,7 @@ public void RenderGrass()
 
 				
 			//tell the engine to regenerate the terrain based on new voxel data
-						if((new Vector2(xx,zz)-new Vector2(X,Z)).magnitude<dist && yy<y-5 && yy>5){
+						if((new Vector3(xx,yy,zz)-new Vector3(X,Y,Z)).magnitude<dist && yy<y-5 && yy>5 && Mathf.Abs(yy-Y)>Mathf.Abs(value)){
 							Voxels[xx,yy,zz] = (byte)Mathf.Clamp(Voxels[xx,yy,zz] + value,0,255);
 							HasChanged=true;
 
@@ -234,7 +234,7 @@ public void CreateVoxels(){
 				hasVoxels = true;
 				hasloaded = true;
 			}
-			VoxelTerrainEngine.GenerateVertices.Add(this);
+			VoxelTerrainEngine.GenerateVertices.Enqueue(this);
 		}
 
 //threaded mesh creation 
@@ -248,7 +248,7 @@ public void CreateVertices(){
 			canCreatemesh = false;
 
 			//create the verts
-			verts = MeshFactory.MarchingCubes.CreateVertices(Voxels,this,2,2,lodLevel);
+			verts = MarchingCubes.CreateVertices(Voxels,this,2,2,lodLevel);
 
 			//store the size so as to avoid garbage creation
 			size = verts.Length;
@@ -290,7 +290,7 @@ public void CreateVertices(){
 					uv[i] = new Color(0,0,0,1 );}
 			}
 			canCreatemesh = true;
-			VoxelTerrainEngine.MeshChunks.Add(this);
+			VoxelTerrainEngine.MeshChunks.Enqueue(this);
 
 	}
 
@@ -366,6 +366,7 @@ public void CreateVertices(){
 		//as well as adds the plant placer script which plants the trees and grass and rocks on the mesh
 	public void CreateMesh( )
 		{	
+			if(canCreatemesh){
 		if(mesh==null)
 			mesh = new Mesh();
 		else if (mesh!=null)
@@ -438,6 +439,7 @@ public void CreateVertices(){
 
 
 			}
+		}
 		}
 	}
 }

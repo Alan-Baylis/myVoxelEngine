@@ -65,6 +65,8 @@
      <Compile Include="Assets\VoxelTerrain\Octree\Scripts\PointOctreeNode.cs" />
      <Compile Include="Assets\VoxelTerrain\Plugins\PerlinNoise.cs" />
      <Compile Include="Assets\VoxelTerrain\SaverVoxel.cs" />
+     <Compile Include="Assets\VoxelTerrain\TerrainEditorUpdate.cs" />
+     <Compile Include="Assets\VoxelTerrain\TerrainUpdate.cs" />
      <Compile Include="Assets\VoxelTerrain\Util\DoubleKeyDictionary.cs" />
      <Compile Include="Assets\VoxelTerrain\Util\DoubleKeyPairValue.cs" />
      <Compile Include="Assets\VoxelTerrain\Util\IntPair.cs" />
