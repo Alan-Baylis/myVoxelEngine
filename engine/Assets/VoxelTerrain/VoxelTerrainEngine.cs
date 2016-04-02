@@ -8,8 +8,15 @@ using System.Linq;
 using PlayerPrefs = VoxelEngine.SaverVoxel;
 using VoxelEngine.DoubleKey;
 namespace VoxelEngine{
-[ExecuteInEditMode]
+	public enum EditorPlay{
+		isEditor = 0,
+		isPlaying = 1,
+	}
+	[RequireComponent (typeof (TerrainUpdate))]
+	[RequireComponent (typeof (TerrainEditorUpdate))]
+
 public class VoxelTerrainEngine: MonoBehaviour{
+		
 	public int seed;
 		float timer;
 	[Range(-10,10)]
@@ -22,6 +29,7 @@ public class VoxelTerrainEngine: MonoBehaviour{
 	[Tooltip("Save Terrain?")]
 	public bool Save;
 	[Tooltip("are you using original shader on terrain?")]
+		public EditorPlay playMode;
 	public bool UseOrignalShader;
 	public Texture []textures;
 	public Texture[] Normals;
@@ -48,19 +56,17 @@ public class VoxelTerrainEngine: MonoBehaviour{
 	[HideInInspector]
 	public Transform Parent;
 	public int m_voxelWidthLength = 32, m_voxelHeight = 128;
-	public Thread thread;
-	public Thread thread2;
+	public Thread[] thread;
 	public static VoxelTerrainEngine Generator;
 	bool CanGenerate;
-	public static List<VoxelChunk>ActiveChunks = new List<VoxelChunk>();
-	public static List<VoxelChunk>MeshChunks = new List<VoxelChunk>();
-	public static List<VoxelChunk>GenerateVertices = new List<VoxelChunk>();
-	public static List<VoxelChunk>GenerateVoxels = new List<VoxelChunk>();
-	public static List<VoxelChunk>EditedChunks = new List<VoxelChunk>();
-	public static List<VoxelChunk>Trash = new List<VoxelChunk>();
-	public static List<myAction>Createvertices = new List<myAction>();
-	public static List<myAction>EditedActions = new List<myAction>();
-	public static List<VoxelChunk>GrassChunks = new List<VoxelChunk>();
+		public static Queue<VoxelChunk>MeshChunks = new Queue<VoxelChunk>();
+		public static Queue<VoxelChunk>GenerateVertices = new Queue<VoxelChunk>();
+		public static Queue<VoxelChunk>GenerateVoxels = new Queue<VoxelChunk>();
+		public static Queue<VoxelChunk>EditedChunks = new Queue<VoxelChunk>();
+		public static Queue<VoxelChunk>Trash = new Queue<VoxelChunk>();
+		public static Queue<myAction>Createvertices = new Queue<myAction>();
+		public static Queue<myAction>EditedActions = new Queue<myAction>();
+		public static List<VoxelChunk>ActiveChunks = new List<VoxelChunk>();
 		public static DoubleKeyDictionary<Vector3 ,Vector3,VoxelChunk> m_voxelChunk = new DoubleKeyDictionary<Vector3, Vector3, VoxelChunk>();
 
 	
@@ -76,14 +82,13 @@ public class VoxelTerrainEngine: MonoBehaviour{
 
 public void Initialize(){
 			ActiveChunks = new List<VoxelChunk>();
-			MeshChunks = new List<VoxelChunk>();
-			GenerateVertices = new List<VoxelChunk>();
-			GenerateVoxels = new List<VoxelChunk>();
-			EditedChunks = new List<VoxelChunk>();
-			Trash = new List<VoxelChunk>();
-			Createvertices = new List<myAction>();
-			EditedActions = new List<myAction>();
-			GrassChunks = new List<VoxelChunk>();
+			MeshChunks = new Queue<VoxelChunk>();
+			GenerateVertices = new Queue<VoxelChunk>();
+			GenerateVoxels = new Queue<VoxelChunk>();
+			EditedChunks = new Queue<VoxelChunk>();
+			Trash = new Queue<VoxelChunk>();
+			Createvertices = new Queue<myAction>();
+			EditedActions = new Queue<myAction>();
 			m_voxelChunk = new DoubleKeyDictionary<Vector3, Vector3, VoxelChunk>();
 			if(UseOrignalShader){
 				m_material.SetTexture("_TextureOne",textures[0]);
@@ -151,11 +156,7 @@ public void Initialize(){
 
 				VoxelChunk.generator = Generator;
 
-				MeshFactory.SurfacePerlin = new PerlinNoise(seed);
-
 				MeshFactory.generator = Generator;
-
-				MeshFactory.MarchingCubes = new MarchingCubes();
 
 				MeshFactory.MakeCaves = MakeCaves;
 				
@@ -164,25 +165,40 @@ public void Initialize(){
 				MarchingCubes.SetWindingOrder(0, 1, 2);
 
 				CanGenerate = true;
+			if(thread==null)
+				thread = new Thread[Environment.ProcessorCount];
+			for(int i = 0;i < thread.Length;i++){
+			if(thread[i]!=null)
+				thread[i].Abort();
+			}
 
-				StartCoroutine(StartThreads());
+			
+				StartThreads();
 	}
 
 		//start all threads
-public IEnumerator StartThreads(){
+public void StartThreads(){
+			for(int i = 0;i < thread.Length;i++){
+
 			
-				thread = new Thread(Thread1);
-				thread.IsBackground=true;
-				thread.Priority = System.Threading.ThreadPriority.BelowNormal;
-				thread.Start();
+			thread[i]= new Thread(Thread1);
+				thread[i].IsBackground=true;
+				thread[i].Priority = System.Threading.ThreadPriority.Normal;
+				thread[i].Start();
 
-				thread2 = new Thread(Thread2);
-				thread2.IsBackground=true;
-				thread2.Priority = System.Threading.ThreadPriority.Normal;
-				thread2.Start();
-			Debug.Log("Threads Started");
-				yield return new WaitForSeconds(1);
 
+			Debug.Log("Thread Started");
+			}
+
+		}
+
+		public void EndAllThreads(){
+			if(thread!=null)
+			for(int i = 0;i < thread.Length;i++){
+					if(thread[i]!=null)
+					thread[i].Abort();
+					Debug.Log("Thread Aborted");
+			}
 
 		}
 		//raycast for the voxel
@@ -248,15 +264,15 @@ public static bool RaycastVoxels(Ray ray, out RaycastHit hitinfo,float distance 
 		/// <param name="dist">Dist.</param>
 		/// <param name="height">Height.</param>
 		public static void SetVoxels(Vector3 hitpoint,float value,float dist){
-			for(int i = 0;i < GrassChunks.Count;i++){
-				
-				VoxelChunk chunk = GrassChunks[i];
+			
+			for(int i = 0;i < ActiveChunks.Count;i++){
+				VoxelChunk chunk = ActiveChunks[i];
 
 				if(chunk.SetVoxels(hitpoint,value,dist)){
 						//Create the voxel data		
 						//set various flags so the engine knows it needs to create a new mesh for terrain
 						chunk.hascollider=false;
-						EditedActions.Add(chunk.CreateVertices);
+						EditedActions.Enqueue(chunk.CreateVertices);
 						
 					}
 
@@ -264,18 +280,17 @@ public static bool RaycastVoxels(Ray ray, out RaycastHit hitinfo,float distance 
 		}
 
 		public static void setMaterial(Vector3 hitpoint,byte value,float dist){
-			for(int i = 0;i < GrassChunks.Count;i++){
+			for(int i = 0;i < ActiveChunks.Count;i++){
 
-				VoxelChunk chunk = GrassChunks[i];
+				VoxelChunk chunk = ActiveChunks[i];
 
 				if(chunk.SetMaterial(hitpoint,value,dist)){
 					//Create the voxel data		
 					//set various flags so the engine knows it needs to create a new mesh for terrain
 					chunk.hascollider=false;
-					EditedActions.Add(chunk.CreateVertices);
+					EditedActions.Enqueue(chunk.CreateVertices);
 
 				}
-
 			}
 		}
 
@@ -298,6 +313,7 @@ static void SetDetailDistance(float Distance){
 
 		//method for saving changes to terrain at runtime
 public void SaveTerrains(){
+			Debug.Log("saved Terrain");
 			for(int i = 0;i < ActiveChunks.Count;i++){
 			VoxelChunk chunk = ActiveChunks[i];
 
@@ -306,22 +322,33 @@ public void SaveTerrains(){
 		}
 	}
 }
+			
+		public void UpdateTerrain(){
+			if(UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode && playMode== EditorPlay.isEditor){
+				Transform[] gamos = GetComponentsInChildren<Transform>();
+				CanGenerate=false;
+				EndAllThreads();
+				for(int i = 0;i < gamos.Length;i++){
+					if(gamos[i]!=transform){
+						DestroyImmediate(gamos[i].gameObject);
 
-void OnDrawGizmos(){
-			UpdateTerrain();
+					}
+				}
+				SaveTerrains();
+			playMode = EditorPlay.isPlaying;}
+			if(playMode== EditorPlay.isEditor){
 			if(UnityEditor.EditorApplication.isCompiling==false && CanGenerate==false){
+
 				Transform[] gamos = GetComponentsInChildren<Transform>();
 				for(int i = 0;i < gamos.Length;i++){
 					if(gamos[i]!=transform){
 						DestroyImmediate(gamos[i].gameObject);
-						if(thread!=null)
-						thread.Abort();
-						if(thread2!=null)
-						thread2.Abort();
+
 					}
 				}
 				SaveTerrains();
 				Initialize();
+
 
 			}else if(UnityEditor.EditorApplication.isCompiling && CanGenerate == true){
 				CanGenerate = false;
@@ -329,24 +356,24 @@ void OnDrawGizmos(){
 				for(int i = 0;i < gamos.Length;i++){
 					if(gamos[i]!=transform){
 						DestroyImmediate(gamos[i].gameObject);
-						if(thread!=null)
-							thread.Abort();
-						if(thread2!=null)
-							thread2.Abort();
-						CanGenerate = false;
+						for(int t = 0;t < thread.Length;t++){
+							if(thread[t]!=null)
+								thread[t].Abort();
+						}
 
+						CanGenerate = false;
 					}
 				}
 				SaveTerrains();
 			}
-		}
+			}
 
-	
-void UpdateTerrain(){
 			if(Camera.current!=null && UnityEditor.Selection.Contains(gameObject)){
 				if(timer<=0.25f)
 					timer+=0.03f;
-				Ray myray = UnityEditor.HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
+				Ray myray ;
+				if(playMode== EditorPlay.isEditor){
+				myray = UnityEditor.HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
 				RaycastHit hit;
 
 				if(Physics.Raycast(myray,out hit,Mathf.Infinity)){
@@ -363,6 +390,7 @@ void UpdateTerrain(){
 
 					Shader.SetGlobalFloat("_highlightSize",effectArea);}
 
+			}
 			}else {
 				Shader.SetGlobalFloat("_highlightSize",0);
 			}
@@ -385,8 +413,7 @@ void UpdateTerrain(){
 				//need to implement a pooling system will save on memory
 				//as well as stop the garbage collector from being called
 			if(Trash.Count>0){
-				VoxelChunk myChunk = Trash[0];
-				Trash.Remove(myChunk);
+				VoxelChunk myChunk = Trash.Dequeue();
 				if(myChunk.mesh!=null)
 				DestroyImmediate (myChunk.mesh);
 				myChunk.mesh=null;
@@ -396,21 +423,16 @@ void UpdateTerrain(){
 			}
 			//create the mesh . this is done in update as calling it from another thread is not allowed
 			if(MeshChunks.Count>0){
-				if(MeshChunks[0].canCreatemesh){
-					VoxelChunk chunk = MeshChunks[0];
-					MeshChunks.Remove(chunk);
+					VoxelChunk chunk = MeshChunks.Dequeue();
 					chunk.CreateMesh();
 					chunk.canCreatemesh=false;
 					if(ActiveChunks.Contains(chunk)==false){
 					ActiveChunks.Add(chunk);
-					GrassChunks.Add(chunk);
-				}
-
 				}
 			}
-				if(GrassChunks.Count>0){
-					for(int i =0;i <GrassChunks.Count;i++)
-						GrassChunks[i].RenderGrass();
+			if(ActiveChunks.Count>0){
+				for(int i =0;i <ActiveChunks.Count;i++)
+					ActiveChunks[i].RenderGrass();
 				}
 			//need to some how check for occlusion and not render things behind other objects
 			
@@ -424,9 +446,12 @@ void Thread1(){
 	{
 
 	try
-	{
+	{	CreateChunks();
+		CreateVoxels();
 		CreateTris();
 		checkActiveChunks();
+					Thread.Sleep(1);
+
 		
 		
 
@@ -446,10 +471,9 @@ void CreateTris(){
 					//order the chunks before creation so that oonly chunks closest to player get created first
 					//had to copy to another array before ordering as it caused errors otherwise
 					//use first chunk in the orderered list to create meshes 
-					VoxelChunk chunk = GenerateVertices[0];
-					GenerateVertices.Remove(chunk);
+					VoxelChunk chunk = GenerateVertices.Dequeue();
 					//createmeshes using voxel data
-					Createvertices.Add(chunk.CreateVertices);
+					Createvertices.Enqueue(chunk.CreateVertices);
 
 
 					//catch all exceptions and display message in console
@@ -465,13 +489,11 @@ void CreateTris(){
 		}
 void CheckVerticesAction(){
 			if(Createvertices.Count>0){
-				myAction action = Createvertices[0];
-				Createvertices.Remove(action);
+				myAction action = Createvertices.Dequeue();
 				action();
 			}
 			if(EditedActions.Count>0){
-				myAction Editaction = EditedActions[0];
-				EditedActions.Remove(Editaction);
+				myAction Editaction = EditedActions.Dequeue();
 				Editaction();
 			}
 		}
@@ -486,9 +508,8 @@ void checkActiveChunks(){
 					if(Vector2.Distance(chunkpos,playerpos)>=distanceToLoad+25){
 							if(chunk.HasChanged && chunk.shouldrender)
 								chunk.SaveVoxels();
-							Trash.Add(chunk);
+							Trash.Enqueue(chunk);
 						m_voxelChunk.Remove(chunk.RealPos*minLod,new Vector3(m_voxelWidthLength,m_voxelHeight,m_voxelWidthLength));
-								GrassChunks.Remove(chunk);
 								ActiveChunks.Remove(chunk);
 							return;
 						}
@@ -496,27 +517,6 @@ void checkActiveChunks(){
 					}
 				}
 		}
-
-//main method for calling chunk creation some optimizations could be done here
-void Thread2 () 
-		{	
-			while (CanGenerate)
-	{
-		try
-			{
-					CreateChunks();
-
-				
-
-
-		
-			//catch exceptions
-			}catch (Exception e)
-			{Debug.LogError(e.StackTrace);
-			}
-			
-		}
-	}
 
 void CreateChunks(){
 			try
@@ -570,14 +570,15 @@ void CreateChunks(){
 											Chunk.hasproccessed=true;
 
 										//add chunk to list of chunks that need noise added to them
-											GenerateVoxels.Add(Chunk);
+											GenerateVoxels.Enqueue(Chunk);
+											return;
 
 									}
 								}
 
 								//if the chunk already exists and its distance is greater then render distance
 
-									CreateVoxels();
+
 
 
 							}
@@ -601,8 +602,7 @@ void CreateVoxels(){
 					//order the chunks before creation so that oonly chunks closest to player get created first
 					//had to copy to another array before ordering as it caused errors otherwise
 					//use first chunk in the orderered list to create meshes 
-					VoxelChunk chunk = GenerateVoxels[0];
-					GenerateVoxels.Remove(chunk);
+					VoxelChunk chunk = GenerateVoxels.Dequeue();
 					//createmeshes using voxel data
 					chunk.CreateVoxels();
 
@@ -620,18 +620,16 @@ void CreateVoxels(){
 			CanGenerate=false;
 			SaveTerrains();
 			//abort thread 1
-			thread.Abort();
-			thread2.Abort();
-			Debug.Log("threads aborted");
+
+				//abort thread 1
+			EndAllThreads();
+
 	}
 		void OnDestroy(){
+			
 			//set flag to stop generation
 			CanGenerate=false;
 			SaveTerrains();
-			//abort thread 1
-			thread.Abort();
-			thread2.Abort();
-			Debug.Log("threads aborted");
 		}
   }
 }

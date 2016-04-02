@@ -3,10 +3,6 @@ using System.Collections;
 namespace VoxelEngine{
 public static class MeshFactory  {
 	public static VoxelTerrainEngine generator;
-	public static Vector3[,,] m_normals;
-	public static Vector3[,,] m_normals2;
-	public static PerlinNoise SurfacePerlin;
-	public static MarchingCubes MarchingCubes;
 	public static bool MakeCaves;
 	public static Vector3[] Createvertices(byte[,,] m_voxels,VoxelChunk chunk,int lod){
 
@@ -20,7 +16,7 @@ public static class MeshFactory  {
 		//calculate normals for the mesh 
 		public static Vector3[] CalculateNormals(byte[,,] m_voxels ,int size,Vector3 [] verts,int lod)
 	{	
-
+		Vector3[,,] m_normals;
 		Vector3[] normals = new Vector3[size];
 
 		int w = m_voxels.GetLength(0);
@@ -53,7 +49,7 @@ public static class MeshFactory  {
 			}
 		}
 		for(int i = 0;i < size ;i++){
-		normals[i] = MeshFactory.TriLinearInterpNormal(verts[i]/VoxelTerrainEngine.TriSize[lod]);
+				normals[i] = MeshFactory.TriLinearInterpNormal(verts[i]/VoxelTerrainEngine.TriSize[lod],m_normals);
 		}
 		
 		return normals;
@@ -62,7 +58,7 @@ public static class MeshFactory  {
 
 		//interpolate normals so normals are smoothed
 
-	public static Vector3 TriLinearInterpNormal(Vector3 pos)
+		public static Vector3 TriLinearInterpNormal(Vector3 pos,Vector3[,,]m_normals)
 	{			
 
 		int x = (int)pos.x;

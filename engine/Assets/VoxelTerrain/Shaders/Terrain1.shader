@@ -75,42 +75,43 @@
 		{
 			float3 projNormal = saturate(pow(IN.thisNormal * 1.5, 4));
 			
-			float4 sand = TriplanarSample(_TextureOne, IN.thisPos, projNormal, 1.0);
+			float4 Texture1 = TriplanarSample(_TextureOne, IN.thisPos, projNormal, 1.0);
 			
-			float4 gravel = TriplanarSample(_TextureTwo, IN.thisPos, projNormal, 1.0);
+			float4 Texture2 = TriplanarSample(_TextureTwo, IN.thisPos, projNormal, 1.0);
 			
-			float4 rock = TriplanarSample(_TextureThree, IN.thisPos, projNormal, 0.1);
+			float4 Texture3 = TriplanarSample(_TextureThree, IN.thisPos, projNormal, 0.1);
 			
-			float4 cliff = TriplanarSample(_TextureFour, IN.thisPos, projNormal, 1.0);
+			float4 Texture4 = TriplanarSample(_TextureFour, IN.thisPos, projNormal, 1.0);
 			
-			float4 sandN = TriplanarSample(_TextureOneN, IN.thisPos, projNormal, 1.0);
+			float4 Texture1N = TriplanarSample(_TextureOneN, IN.thisPos, projNormal, 1.0);
 			
-			float4 gravelN = TriplanarSample(_TextureTwoN, IN.thisPos, projNormal, 1.0);
+			float4 Texture2N = TriplanarSample(_TextureTwoN, IN.thisPos, projNormal, 1.0);
 			
-			float4 rockN = TriplanarSample(_TextureThreeN, IN.thisPos, projNormal, 0.1);
+			float4 Texture3N = TriplanarSample(_TextureThreeN, IN.thisPos, projNormal, 0.1);
 			
-			float4 cliffN = TriplanarSample(_TextureFourN, IN.thisPos, projNormal, 1.0);
+			float4 Texture4N = TriplanarSample(_TextureFourN, IN.thisPos, projNormal, 1.0);
 			
 			float4 controlMap = IN.color;
-			float4 col= 0;
-			float4 colN= 0;
+		
+			float4 col= Texture1;
+			float4 colN= Texture1N;
 			
 			
-			if(controlMap.r <= 1.0){
-			col = blend(col,controlMap.r, rock,controlMap.r);
-			colN = blend(colN,controlMap.r, rockN,controlMap.r );}
+			if(controlMap.r <= 1.0 && controlMap.r>0){
+			col = blend(col,controlMap.r, Texture1,controlMap.r);
+			colN = blend(colN,controlMap.r, Texture1N,controlMap.r );}
 			
-			if(controlMap.g <= 1.0 ){
-			col = blend(col,controlMap.g,sand , (controlMap.g));
-			colN = blend(colN,controlMap.g,sandN , controlMap.g);}
+			if(controlMap.g <= 1.0 && controlMap.g>0){
+			col = blend(col,controlMap.g,Texture2 , controlMap.g);
+			colN = blend(colN,controlMap.g,Texture2N , controlMap.g);}
 
-			if(controlMap.x <= 1.0 ){
-			col = blend(col,controlMap.b, gravel, (controlMap.b));
-			colN = blend(colN,controlMap.b, gravelN, controlMap.b);}
+			if(controlMap.b <= 1.0 && controlMap.b>0){
+			col = blend(col,controlMap.b, Texture3, controlMap.b);
+			colN = blend(colN,controlMap.b, Texture3N, controlMap.b);}
 
-			if(controlMap.a <= 1.0 ){
-			col = blend(col,controlMap.a, cliff, (controlMap.a));
-			colN = blend(colN,controlMap.a, cliffN, controlMap.a);}
+			if(controlMap.a <= 1.0 && controlMap.a>0){
+			col = blend(col,controlMap.a, Texture4, controlMap.a);
+			colN = blend(colN,controlMap.a, Texture4N, controlMap.a);}
 			_highlightArea.y = IN.thisPos.y;
 			if(distance(_highlightArea,IN.thisPos)<=_highlightSize){
 			col+=float4(0,0,0.5f,0);
@@ -126,9 +127,10 @@
 
 			o.Metallic = 0;
             
-			//o.Albedo = controlMap;  
+			
 			o.Albedo = col.rgb;
 			o.Alpha = col.a;
+			if(colN.r>0)
 			o.Normal = UnpackNormal(colN);
 			o.Smoothness = _Smoothness;
 		}
